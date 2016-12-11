@@ -3,12 +3,15 @@ use strict;
 use warnings;
 use Carp;
 use JSON;
+use Getopt::Long;
 use Data::Dumper;
 use lib './lib';
 use ABC::RabbitMQ::Batch;
 use Time::HiRes qw(sleep);
 
 our $VERSION = '0.1';
+my $batch_size = 10;
+GetOptions('batch-size=i' => \$batch_size);
 
 # this is ony for signal handling in our infinite loop
 my $should_stop = 0;
@@ -27,7 +30,7 @@ while (!$should_stop) {
         queue_out  => 'test_out',
         handler    => \&msg_handler, # this is processing handler
         batch      => {
-            size => 10,  # number of messages in a batch
+            size => $batch_size,  # number of messages in a batch
             timeout => 2 # time to wait if we don't have enough messages to form a complete batch
         }
     });

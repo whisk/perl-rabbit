@@ -34,7 +34,7 @@ $mq->channel_open($channel);
 
 my $i = 0;
 while ($i < $messages) {
-    my $uuid = time() + $i;
+    my $uuid = time() * rand(10000) + $i;
     my $msg_body = to_json({msg => sprintf("Message number %d", $i), uuid => $uuid});
     $mq->publish($channel, $queue, $msg_body, undef, {delivery_mode => $delivery_mode});
     print "Sent message: $msg_body\n";
