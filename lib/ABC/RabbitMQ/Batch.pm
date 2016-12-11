@@ -35,13 +35,19 @@ ABC::RabbitMQ::Batch - simple batch processing of messages
 
 sub new {
     my ($class, $rabbit_hostname, $rabbit_options) = @_;
-    my $mq = Net::AMQP::RabbitMQ->new();
-    $mq->connect($rabbit_hostname, $rabbit_options);
-    my $self = bless {
-        mq => $mq,
-    }, $class;
+    croak('No hostname given') unless $rabbit_hostname;
+    croak('No connection options given') unless $rabbit_options;
 
-    return $self;
+    return bless {
+        mq => $class->_get_mq($rabbit_hostname, $rabbit_options),
+    }, $class;
+}
+
+sub _get_mq {
+    my ($class, $rabbit_hostname, $rabbit_options) = @_;
+    my $mq = Net::AMQP::RabbitMQ->new();
+    $mq->connect($rabbit_hostname, $rabbit_options) or croak;
+    return $mq;
 }
 
 sub process {
@@ -77,6 +83,8 @@ sub process {
 
 sub _get {
     my ($self, $channel_id, $queue, $mq_opts, $opts) = @_;
+    assert($channel_id);
+    assert($queue);
     $opts->{size} ||= 10;
     $opts->{timeout} ||= 5;
     $opts->{sleep} ||= 1;
@@ -126,6 +134,8 @@ sub _ack_messages {
 
 sub _check_messages {
     my ($self, $messages, $processed_messages) = @_;
+    assert(ref($messages) eq 'ARRAY');
+
     if (ref($processed_messages) ne 'ARRAY') {
         carp('Ivalid handler output');
         return 0;
