@@ -23,6 +23,8 @@ Vagrant.configure(2) do |config|
     rabbitmq-plugins enable rabbitmq_management
     wget -O /usr/local/bin/rabbitmqadmin "http://localhost:15672/cli/rabbitmqadmin" && \
       chmod a+x /usr/local/bin/rabbitmqadmin
+    rabbitmqadmin declare queue name=test_in
+    rabbitmqadmin declare queue name=test_out
 
     # Rabbit users
     rabbitmqctl add_user root NTQ4YzZiZjJjMmVh && \
@@ -33,13 +35,7 @@ Vagrant.configure(2) do |config|
     export PERL_MM_USE_DEFAULT=1
     cpan -i Variable::Magic YAML Log::Log4perl
     cpan -i LWP::UserAgent # for Net::AMQP::RabbitMQ, optional
-    cpan -i -f Net::AMQP::RabbitMQ # WARN: some tests fails
-  SCRIPT
-
-  config.vm.provision 'rabbit-abc', type: 'shell', inline: <<-SCRIPT
-    export PERL_MM_USE_DEFAULT=1
-    cpan -i JSON
-    rabbitmqadmin declare queue name=test_in
-    rabbitmqadmin declare queue name=test_out
+    cpan -i -f Net::AMQP::RabbitMQ # WARN: some tests fail for unknown reason
+    cpan -i JSON Try::Tiny Carp::Assert
   SCRIPT
 end
