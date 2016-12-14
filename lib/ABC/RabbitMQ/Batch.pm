@@ -8,7 +8,7 @@ use Try::Tiny;
 use Net::AMQP::RabbitMQ;
 use Time::HiRes qw(time);
 use Data::Dumper;
-our $VERSION = '0.1';
+our $VERSION = '0.1.1';
 
 =head1 NAME
 

@@ -1,0 +1,11 @@
+.proverc
+lib/ABC/RabbitMQ/Batch.pm
+LICENSE
+Makefile.pl
+MANIFEST
+MANIFEST.SKIP
+process_in_batches.pl
+README.md
+send_messages.pl
+t/01_batch.t
+verify_messages.pl
