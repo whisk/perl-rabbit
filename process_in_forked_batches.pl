@@ -4,38 +4,44 @@ use warnings;
 use Carp;
 use Getopt::Long;
 use Data::Dumper;
-use threads;
 use lib './lib';
 use ABC::RabbitMQ::Batch;
 use Time::HiRes qw(sleep);
 
 our $VERSION = '0.1';
 my $batch_size = 10;
-my $threads_max = 4;
+my $childs_max = 4;
 GetOptions(
 'batch-size=i' => \$batch_size,
-'threads=i'    => \$threads_max,
+'childs=i'    => \$childs_max,
 );
 
 # this is ony for signal handling in our infinite loop
 my $should_stop = 0;
+local $SIG{INT} = \&signal_handler;
+local $SIG{TERM} = \&signal_handler;
 
-my $threads = [];
-for my $i (0 .. $threads_max - 1) {
-    $threads->[$i] = threads->create(\&runner);
+my $childs = [];
+for my $i (0 .. $childs_max - 1) {
+    my $pid = fork();
+    if ($pid == 0) {
+        runner();
+        exit(0);
+    } else {
+        push @$childs, $pid;
+    }
 }
-foreach my $t (@$threads) {
-    $t->join();
+
+foreach my $pid (@$childs) {
+    waitpid($pid, 0);
 }
 
 exit(0);
 ###
 
 sub runner {
-    printf "Starting thread %d...\n", threads->tid();
+    printf "Starting process %d...\n", $$;
 
-    local $SIG{INT} = \&signal_handler;
-    local $SIG{TERM} = \&signal_handler;
     # connect to RabbitMQ
     my $rb = ABC::RabbitMQ::Batch->new('localhost', { user => 'guest', password => 'guest' }) or croak;
     # do our processing in a infinite loop
@@ -53,6 +59,8 @@ sub runner {
         });
         sleep 0.1;
     }
+
+    printf "Finishing process %d.\n", $$;
 }
 
 # sample handler
