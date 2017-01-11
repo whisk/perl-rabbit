@@ -8,7 +8,7 @@ use Try::Tiny;
 use Net::AMQP::RabbitMQ;
 use Time::HiRes qw(time);
 use Data::Dumper;
-our $VERSION = '0.1.1';
+our $VERSION = '0.1.2';
 
 =head1 NAME
 
@@ -65,7 +65,7 @@ sub process {
             $processed_messages = &$handler($messages);
         }
         catch {
-            cluck("Handler error: $@");
+            cluck("Handler error: $_");
         };
         if ($self->_check_messages($messages, $processed_messages)) {
             $self->_publish($processed_messages, $channel_id, $queue_out, $options->{publish_options}, $options->{publish_props});
@@ -73,7 +73,7 @@ sub process {
         }
     }
     catch {
-        croak("Error: $@");
+        croak("Error: $_");
     }
     finally {
         $self->{mq}->channel_close($channel_id);
@@ -137,7 +137,7 @@ sub _check_messages {
     assert(ref($messages) eq 'ARRAY');
 
     if (ref($processed_messages) ne 'ARRAY') {
-        carp('Ivalid handler output');
+        carp('Invalid handler output');
         return 0;
     }
     if (scalar(@$messages) != scalar(@$processed_messages)) {
