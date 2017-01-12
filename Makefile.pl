@@ -1,11 +1,11 @@
 use ExtUtils::MakeMaker;
 
 WriteMakefile(
-    NAME            => 'ABC::RabbitMQ::Batch',
+    NAME            => 'Net::AMQP::RabbitMQ::Batch',
     AUTHOR          => 'Alex Svetkin',
     LICENSE         => 'MIT',
-    VERSION_FROM    => 'lib/ABC/RabbitMQ/Batch.pm',
-    ABSTRACT_FROM   => 'lib/ABC/RabbitMQ/Batch.pm',
+    VERSION_FROM    => 'lib/Net/AMQP/RabbitMQ/Batch.pm',
+    ABSTRACT_FROM   => 'lib/Net/AMQP/RabbitMQ/Batch.pm',
     PREREQ_PM       => {
         'Carp'                => 0,
         'Carp::Assert'        => 0,

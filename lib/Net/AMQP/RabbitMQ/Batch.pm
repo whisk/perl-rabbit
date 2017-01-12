@@ -1,4 +1,4 @@
-package ABC::RabbitMQ::Batch; # TODO: rename!
+package Net::AMQP::RabbitMQ::Batch;
 
 use strict;
 use warnings;
@@ -8,15 +8,15 @@ use Try::Tiny;
 use Net::AMQP::RabbitMQ;
 use Time::HiRes qw(time);
 use Data::Dumper;
-our $VERSION = '0.2000';
+our $VERSION = '0.2001';
 
 =head1 NAME
 
-ABC::RabbitMQ::Batch - simple batch processing of messages
+Net::AMQP::RabbitMQ::Batch - simple batch processing of messages
 
 =head1 SYNOPSIS
 
-    my $rb = ABC::RabbitMQ::Batch->new('localhost', { user => 'guest', password => 'guest' }) or croak;
+    my $rb = Net::AMQP::RabbitMQ::Batch->new('localhost', { user => 'guest', password => 'guest' }) or croak;
     $rb->process({
         channel_id => 1,
         queue_in   => 'test_in',

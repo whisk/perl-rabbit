@@ -3,6 +3,6 @@ use strict;
 use warnings;
 use Test::Simple tests => 1;
 
-use ABC::RabbitMQ::Batch;
+use Net::AMQP::RabbitMQ::Batch;
 
 ok(1);

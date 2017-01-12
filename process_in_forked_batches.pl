@@ -5,7 +5,7 @@ use Carp;
 use Getopt::Long;
 use Data::Dumper;
 use lib './lib';
-use ABC::RabbitMQ::Batch;
+use Net::AMQP::RabbitMQ::Batch;
 use Time::HiRes qw(sleep);
 
 our $VERSION = '0.2000';
@@ -45,7 +45,7 @@ sub runner {
     printf "Starting process %d...\n", $$;
 
     # connect to RabbitMQ
-    my $rb = ABC::RabbitMQ::Batch->new('localhost', { user => 'guest', password => 'guest' }) or croak;
+    my $rb = Net::AMQP::RabbitMQ::Batch->new('localhost', { user => 'guest', password => 'guest' }) or croak;
     # do our processing in a infinite loop
     while (!$should_stop) {
         # process a batch

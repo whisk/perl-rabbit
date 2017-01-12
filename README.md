@@ -1,10 +1,10 @@
-# Perl Rabbit
+# Net::AMQP::RabbitMQ::Batch
 
 Experiments with RabbitMQ: batch processing of messages.
 
 ## Synopsis
 
-    my $rb = ABC::RabbitMQ::Batch->new('localhost', { user => 'guest', password => 'guest' }) or croak;
+    my $rb = Net::AMQP::RabbitMQ::Batch->new('localhost', { user => 'guest', password => 'guest' }) or croak;
     $rb->process({
         channel_id => 1,
         queue_in   => 'test_in',
@@ -63,7 +63,7 @@ Define messages handler:
 
 Connect to RabbitMQ:
 
-        my $rb = ABC::RabbitMQ::Batch->new('localhost', { user => 'guest', password => 'guest' }) or croak;
+        my $rb = Net::AMQP::RabbitMQ::Batch->new('localhost', { user => 'guest', password => 'guest' }) or croak;
 
 Process a batch:
 

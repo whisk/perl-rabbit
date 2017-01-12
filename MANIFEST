@@ -1,5 +1,5 @@
 .proverc
-lib/ABC/RabbitMQ/Batch.pm
+lib/Net/AMQP/RabbitMQ/Batch.pm
 LICENSE
 Makefile.pl
 MANIFEST
