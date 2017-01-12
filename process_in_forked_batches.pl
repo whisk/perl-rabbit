@@ -8,12 +8,14 @@ use lib './lib';
 use ABC::RabbitMQ::Batch;
 use Time::HiRes qw(sleep);
 
-our $VERSION = '0.1';
+our $VERSION = '0.2000';
 my $batch_size = 10;
 my $childs_max = 4;
+my $ignore_size = 0;
 GetOptions(
-'batch-size=i' => \$batch_size,
-'childs=i'    => \$childs_max,
+    'batch-size=i' => \$batch_size,
+    'childs=i'    => \$childs_max,
+    'ignore-size'  => \$ignore_size,
 );
 
 # this is ony for signal handling in our infinite loop
@@ -53,8 +55,12 @@ sub runner {
             queue_out  => 'test_out',
             handler    => \&msg_handler, # this is processing handler
             batch      => {
-                size => $batch_size,  # number of messages in a batch
-                timeout => 2 # time to wait if we don't have enough messages to form a complete batch
+                # number of messages in a batch
+                size => $batch_size,
+                # time to wait if we don't have enough messages to form a complete batch
+                timeout => 2,
+                # don't raise error if number of processed messages does not match number of incoming messages
+                ignore_size => $ignore_size,
             }
         });
         sleep 0.1;
@@ -85,7 +91,7 @@ sub msg_handler {
         };
         push(@$new_mesages, $new_msg);
     }
-    if (rand() < 0.05 && @$new_mesages > 0) {
+    if (rand() < 0.1 && @$new_mesages > 0) {
         carp('Dropped 1 message for no reason');
         pop(@$new_mesages);
     }

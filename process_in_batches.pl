@@ -9,9 +9,13 @@ use lib './lib';
 use ABC::RabbitMQ::Batch;
 use Time::HiRes qw(sleep);
 
-our $VERSION = '0.1';
+our $VERSION = '0.3000';
 my $batch_size = 10;
-GetOptions('batch-size=i' => \$batch_size);
+my $ignore_size = 0;
+GetOptions(
+    'batch-size=i' => \$batch_size,
+    'ignore-size'  => \$ignore_size,
+);
 
 # this is ony for signal handling in our infinite loop
 my $should_stop = 0;
@@ -25,13 +29,17 @@ my $rb = ABC::RabbitMQ::Batch->new('localhost', { user => 'guest', password => '
 while (!$should_stop) {
     # process a batch
     my $result = $rb->process({
-        channel_id => 1,
-        queue_in   => 'test_in',
-        queue_out  => 'test_out',
-        handler    => \&msg_handler, # this is processing handler
-        batch      => {
-            size => $batch_size,  # number of messages in a batch
-            timeout => 2 # time to wait if we don't have enough messages to form a complete batch
+        channel_id  => 1,
+        queue_in    => 'test_in',
+        queue_out   => 'test_out',
+        handler     => \&msg_handler, # this is processing handler
+        batch       => {
+            # number of messages in a batch
+            size        => $batch_size,
+            # time to wait if we don't have enough messages to form a complete batch
+            timeout     => 2,
+            # don't raise error if number of processed messages does not match number of incoming messages
+            ignore_size => $ignore_size,
         }
     });
     sleep 0.1;
@@ -62,7 +70,7 @@ sub msg_handler {
         };
         push(@$new_mesages, $new_msg);
     }
-    if (rand() < 0.05 && @$new_mesages > 0) {
+    if (rand() < 0.1 && @$new_mesages > 0) {
         carp('Dropped 1 message for no reason');
         pop(@$new_mesages);
     }

@@ -10,7 +10,7 @@ Experiments with RabbitMQ: batch processing of messages.
         queue_in   => 'test_in',
         queue_out  => 'test_out',
         handler    => \&msg_handler,
-        batch      => { size => 10, timeout => 2 }
+        batch      => { size => 10, timeout => 2, ignore_size => 0 }
     });
 
     sub msg_handler {
@@ -72,10 +72,10 @@ Process a batch:
         queue_in   => 'test_in',
         queue_out  => 'test_out',
         handler    => \&msg_handler,
-        batch      => { size => 10, timeout => 2 }
+        batch      => { size => 10, timeout => 2, ignore_size => 0 }
     });
 
-You might like to wrap it with some `while(1) {...}` loop. See `process_in_batches.pl` for example.
+You might like to wrap it with some `while(1) {...}` loop. See `process_in_batches.pl` or `process_in_forked_batches.pl` for example.
 
 ## Known Issues
 

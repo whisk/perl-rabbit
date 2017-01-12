@@ -1,4 +1,4 @@
-package ABC::RabbitMQ::Batch;
+package ABC::RabbitMQ::Batch; # TODO: rename!
 
 use strict;
 use warnings;
@@ -8,7 +8,7 @@ use Try::Tiny;
 use Net::AMQP::RabbitMQ;
 use Time::HiRes qw(time);
 use Data::Dumper;
-our $VERSION = '0.1.2';
+our $VERSION = '0.2000';
 
 =head1 NAME
 
@@ -22,7 +22,7 @@ ABC::RabbitMQ::Batch - simple batch processing of messages
         queue_in   => 'test_in',
         queue_out  => 'test_out',
         handler    => \&msg_handler,
-        batch      => { size => 10, timeout => 2 }
+        batch      => { size => 10, timeout => 2, ignore_size => 0 }
     });
 
     sub msg_handler {
@@ -63,19 +63,16 @@ sub process {
         my $processed_messages = undef;
         try {
             $processed_messages = &$handler($messages);
-        }
-        catch {
+        } catch {
             cluck("Handler error: $_");
         };
-        if ($self->_check_messages($messages, $processed_messages)) {
+        if ($self->_check_messages($messages, $processed_messages, $options->{batch})) {
             $self->_publish($processed_messages, $channel_id, $queue_out, $options->{publish_options}, $options->{publish_props});
             $self->_ack_messages($messages, $channel_id);
         }
-    }
-    catch {
+    } catch {
         croak("Error: $_");
-    }
-    finally {
+    } finally {
         $self->{mq}->channel_close($channel_id);
     };
     return 1;
@@ -133,15 +130,18 @@ sub _ack_messages {
 }
 
 sub _check_messages {
-    my ($self, $messages, $processed_messages) = @_;
+    my ($self, $messages, $processed_messages, $options) = @_;
     assert(ref($messages) eq 'ARRAY');
+    assert(ref($options) eq 'HASH');
 
     if (ref($processed_messages) ne 'ARRAY') {
-        carp('Invalid handler output');
+        carp('Invalid handler output (expected ARRAYREF)');
         return 0;
     }
-    if (scalar(@$messages) != scalar(@$processed_messages)) {
-        carp('Number of incoming and processed messages does not match');
+    if (!$options->{ignore_size} && scalar(@$messages) != scalar(@$processed_messages)) {
+        carp(sprintf('Numbers of incoming and processed messages do not match (expected %d, got %d). '
+            . 'Discarding this batch',
+            scalar(@$messages), scalar(@$processed_messages)));
         return 0;
     }
     return 1;
