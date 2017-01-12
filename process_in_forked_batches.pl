@@ -50,7 +50,7 @@ sub runner {
     while (!$should_stop) {
         # process a batch
         my $result = $rb->process({
-            channel_id => 1,
+            channel_id => int($$),
             queue_in   => 'test_in',
             queue_out  => 'test_out',
             handler    => \&msg_handler, # this is processing handler

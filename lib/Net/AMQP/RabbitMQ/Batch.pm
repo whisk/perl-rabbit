@@ -66,14 +66,20 @@ sub process {
         } catch {
             cluck("Handler error: $_");
         };
-        if ($self->_check_messages($messages, $processed_messages, $options->{batch})) {
+        if ($self->_check_messages($messages, $processed_messages, $options)) {
             $self->_publish($processed_messages, $channel_id, $queue_out, $options->{publish_options}, $options->{publish_props});
-            $self->_ack_messages($messages, $channel_id);
+            if ($options->{manual_ack}) {
+                $self->_ack_messages($messages, $channel_id);
+            } else {
+                $self->_ack_messages($processed_messages, $channel_id);
+            }
+        } else {
+            $self->_reject_messages($messages, $channel_id, 1); # explicitly requeue
         }
     } catch {
         croak("Error: $_");
     } finally {
-        $self->{mq}->channel_close($channel_id);
+        $self->{mq}->channel_close($channel_id); # all unacked messages are redelivered
     };
     return 1;
 }
@@ -111,8 +117,9 @@ sub _publish {
     assert($queue);
 
     foreach my $msg (@$messages) {
-        assert($msg->{body});
-        $self->{mq}->publish($channel_id, $queue, $msg->{body}, $mq_options, $mq_props);
+        if (defined $msg->{body}) {
+            $self->{mq}->publish($channel_id, $queue, $msg->{body}, $mq_options, $mq_props);
+        }
     }
     return;
 }
@@ -129,6 +136,17 @@ sub _ack_messages {
     return;
 }
 
+sub _reject_messages {
+    my ($self, $messages, $channel_id, $requeue) = @_;
+    assert(ref($messages) eq 'ARRAY');
+    assert($channel_id);
+
+    foreach my $msg (@$messages) {
+        assert($msg->{delivery_tag});
+        $self->{mq}->reject($channel_id, $msg->{delivery_tag}, $requeue); # requeue
+    }
+}
+
 sub _check_messages {
     my ($self, $messages, $processed_messages, $options) = @_;
     assert(ref($messages) eq 'ARRAY');
@@ -138,10 +156,17 @@ sub _check_messages {
         carp('Invalid handler output (expected ARRAYREF)');
         return 0;
     }
-    if (!$options->{ignore_size} && scalar(@$messages) != scalar(@$processed_messages)) {
+    if ($options->{manual_ack}) {
+        foreach my $msg ($processed_messages) {
+            if (!$msg->{delivery_tag}) {
+                carp('No message delivery tag (it is required for manual_ack)');
+                return 0;
+            }
+        }
+    }
+    if (!$options->{batch}->{ignore_size} && scalar(@$messages) != scalar(@$processed_messages)) {
         carp(sprintf('Numbers of incoming and processed messages do not match (expected %d, got %d). '
-            . 'Discarding this batch',
-            scalar(@$messages), scalar(@$processed_messages)));
+            . 'Discarding this batch', scalar(@$messages), scalar(@$processed_messages)));
         return 0;
     }
     return 1;
