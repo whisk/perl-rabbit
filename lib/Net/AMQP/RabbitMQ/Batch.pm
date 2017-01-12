@@ -131,7 +131,12 @@ sub _ack_messages {
 
     foreach my $msg (@$messages) {
         assert($msg->{delivery_tag});
-        $self->{mq}->ack($channel_id, $msg->{delivery_tag});
+        if ($msg->{reject}) {
+            my $requeue = ref $msg->{reject} eq 'HASH' ? $msg->{reject}->{requeue} : 1;
+            $self->{mq}->reject($channel_id, $msg->{delivery_tag}, $requeue);
+        } else {
+            $self->{mq}->ack($channel_id, $msg->{delivery_tag});
+        }
     }
     return;
 }
