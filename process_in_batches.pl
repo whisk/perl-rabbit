@@ -40,7 +40,8 @@ while (!$should_stop) {
             timeout     => 2,
             # don't raise error if number of processed messages does not match number of incoming messages
             ignore_size => $ignore_size,
-        }
+        },
+        ignore_errors => 1
     });
     sleep 0.1;
 }

@@ -2,13 +2,13 @@ package Net::AMQP::RabbitMQ::Batch;
 
 use strict;
 use warnings;
-use Carp qw(carp croak cluck);
+use Carp qw(carp croak cluck confess);
 use Carp::Assert;
 use Try::Tiny;
 use Net::AMQP::RabbitMQ;
 use Time::HiRes qw(time);
 use Data::Dumper;
-our $VERSION = '0.2100';
+our $VERSION = '0.2200';
 
 =head1 NAME
 
@@ -22,7 +22,12 @@ Net::AMQP::RabbitMQ::Batch - simple batch processing of messages for RabbitMQ
         queue_in    => 'test_in',
         routing_key => 'test_out',
         handler     => \&msg_handler,
-        batch       => { size => 10, timeout => 2, ignore_size => 0 }
+        batch       => {
+            size          => 10, # batch size
+            timeout       => 2,  #
+            ignore_size   => 0   # ignore in/out batches size mismatch
+        },
+        ignore_errors => 0 # ignore handler errors
     });
 
     sub msg_handler {
@@ -56,6 +61,9 @@ sub process {
     my $queue_in = $options->{queue_in} or croak('No queue_in given');
     my $routing_key = $options->{routing_key} or croak('No routing_key given');
     my $handler = $options->{handler} or croak('No handler given');
+    my $ignore_errors = $options->{ignore_errors} || 0;
+
+    my $success = 1;
 
     try {
         $self->{mq}->channel_open($channel_id);
@@ -64,18 +72,26 @@ sub process {
         try {
             $processed_messages = &$handler($messages);
         } catch {
-            cluck("Handler error: $_");
+            if ($ignore_errors) {
+                cluck("Batch handler error: $_");
+                $success = 0;
+            } else {
+                confess("Batch handler error: $_");
+            }
         };
-        if ($self->_check_messages($messages, $processed_messages, $options->{batch})) {
+        if ($success && $self->_check_messages($messages, $processed_messages, $options->{batch})) {
             $self->_publish($processed_messages, $channel_id, $routing_key, $options->{publish_options}, $options->{publish_props});
             $self->_ack_messages($messages, $channel_id);
+        } else {
+            $success = 0;
         }
     } catch {
         croak("Error: $_");
     } finally {
         $self->{mq}->channel_close($channel_id);
     };
-    return 1;
+
+    return $success;
 }
 
 sub _get {
