@@ -8,21 +8,21 @@ use Try::Tiny;
 use Net::AMQP::RabbitMQ;
 use Time::HiRes qw(time);
 use Data::Dumper;
-our $VERSION = '0.2001';
+our $VERSION = '0.2100';
 
 =head1 NAME
 
-Net::AMQP::RabbitMQ::Batch - simple batch processing of messages
+Net::AMQP::RabbitMQ::Batch - simple batch processing of messages for RabbitMQ
 
 =head1 SYNOPSIS
 
     my $rb = Net::AMQP::RabbitMQ::Batch->new('localhost', { user => 'guest', password => 'guest' }) or croak;
     $rb->process({
-        channel_id => 1,
-        queue_in   => 'test_in',
-        queue_out  => 'test_out',
-        handler    => \&msg_handler,
-        batch      => { size => 10, timeout => 2, ignore_size => 0 }
+        channel_id  => 1,
+        queue_in    => 'test_in',
+        routing_key => 'test_out',
+        handler     => \&msg_handler,
+        batch       => { size => 10, timeout => 2, ignore_size => 0 }
     });
 
     sub msg_handler {
@@ -54,7 +54,7 @@ sub process {
     my ($self, $options) = @_;
     my $channel_id = $options->{channel_id} or croak('No channel_id given');
     my $queue_in = $options->{queue_in} or croak('No queue_in given');
-    my $queue_out = $options->{queue_out} or croak('No queue_out given');
+    my $routing_key = $options->{routing_key} or croak('No routing_key given');
     my $handler = $options->{handler} or croak('No handler given');
 
     try {
@@ -67,7 +67,7 @@ sub process {
             cluck("Handler error: $_");
         };
         if ($self->_check_messages($messages, $processed_messages, $options->{batch})) {
-            $self->_publish($processed_messages, $channel_id, $queue_out, $options->{publish_options}, $options->{publish_props});
+            $self->_publish($processed_messages, $channel_id, $routing_key, $options->{publish_options}, $options->{publish_props});
             $self->_ack_messages($messages, $channel_id);
         }
     } catch {

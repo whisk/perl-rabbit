@@ -50,11 +50,11 @@ sub runner {
     while (!$should_stop) {
         # process a batch
         my $result = $rb->process({
-            channel_id => 1,
-            queue_in   => 'test_in',
-            queue_out  => 'test_out',
-            handler    => \&msg_handler, # this is processing handler
-            batch      => {
+            channel_id  => 1,
+            queue_in    => 'test_in',
+            routing_key => 'test_out',
+            handler     => \&msg_handler, # this is processing handler
+            batch       => {
                 # number of messages in a batch
                 size => $batch_size,
                 # time to wait if we don't have enough messages to form a complete batch

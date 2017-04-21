@@ -32,10 +32,10 @@ Vagrant.configure(2) do |config|
       rabbitmqctl set_permissions -p / root ".*" ".*" ".*"
 
     # Perl
-    export PERL_MM_USE_DEFAULT=1
-    cpan -i Variable::Magic YAML Log::Log4perl
-    cpan -i LWP::UserAgent # for Net::AMQP::RabbitMQ, optional
-    cpan -i JSON Try::Tiny Carp::Assert
-    cpan -i -f Net::AMQP::RabbitMQ # WARN: some tests fail for unknown reason
+    apt-get install -y cpanminus
+    cpanm Variable::Magic YAML Log::Log4perl
+    cpanm LWP::UserAgent                      # for Net::AMQP::RabbitMQ, optional
+    cpanm JSON Try::Tiny Carp::Assert
+    cpanm --force Net::AMQP::RabbitMQ         # WARN: some tests fail for unknown reason
   SCRIPT
 end

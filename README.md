@@ -1,16 +1,16 @@
 # Net::AMQP::RabbitMQ::Batch
 
-Experiments with RabbitMQ: batch processing of messages.
+Simple batch processing of messages for RabbitMQ
 
 ## Synopsis
 
     my $rb = Net::AMQP::RabbitMQ::Batch->new('localhost', { user => 'guest', password => 'guest' }) or croak;
     $rb->process({
-        channel_id => 1,
-        queue_in   => 'test_in',
-        queue_out  => 'test_out',
-        handler    => \&msg_handler,
-        batch      => { size => 10, timeout => 2, ignore_size => 0 }
+        channel_id  => 1,
+        queue_in    => 'test_in',
+        routing_key => 'test_out',
+        handler     => \&msg_handler,
+        batch       => { size => 10, timeout => 2, ignore_size => 0 }
     });
 
     sub msg_handler {
@@ -21,13 +21,13 @@ Experiments with RabbitMQ: batch processing of messages.
 
 ## Description
 
-Assume you have two RabbitMQ queues - *in* and *out*. You need to get messages from *in*, process them somehow and put them to *out*. But you would like to do it in batches, processing many messages at once.
+Assume read messages from a queue, process them and publish. But you would like to do it in batches, processing many messages at once.
 
 This module:
 
- * gets messages from in queue and publish them to out queue
+ * gets messages from in queue and publish them by routing key
  * uses your handler to batch process messages
- * keeps persistency - if processing fails, nothing lost from in queue, nothing published to out queue
+ * keeps persistency - if processing fails, nothing lost from input queue, nothing published
 
 ## Prerequisites
 
@@ -37,11 +37,11 @@ This module:
 
 ## Usage
 
-Define messages handler:
+Define a messages handler:
 
     sub msg_handler {
         my $messages = shift;
-        # work with hashref of messages
+        # works with hashref of messages
         return $messages;
     }
 
@@ -63,16 +63,16 @@ Define messages handler:
 
 Connect to RabbitMQ:
 
-        my $rb = Net::AMQP::RabbitMQ::Batch->new('localhost', { user => 'guest', password => 'guest' }) or croak;
+    my $rb = Net::AMQP::RabbitMQ::Batch->new('localhost', { user => 'guest', password => 'guest' }) or croak;
 
 Process a batch:
 
     $rb->process({
-        channel_id => 1,
-        queue_in   => 'test_in',
-        queue_out  => 'test_out',
-        handler    => \&msg_handler,
-        batch      => { size => 10, timeout => 2, ignore_size => 0 }
+        channel_id  => 1,
+        queue_in    => 'test_in',
+        routing_key => 'test_out',
+        handler     => \&msg_handler,
+        batch       => { size => 10, timeout => 2, ignore_size => 0 }
     });
 
 You might like to wrap it with some `while(1) {...}` loop. See `process_in_batches.pl` or `process_in_forked_batches.pl` for example.
@@ -81,7 +81,7 @@ You might like to wrap it with some `while(1) {...}` loop. See `process_in_batch
 
 * Not a CPAN module yet
 * Can not set infinity timeout (use very long int)
-* Only very simple in queue -> out queue processing
+* Only very simple in -> out processing
 * No POD
 * No tests yet which is very sad
 
