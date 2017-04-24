@@ -14,7 +14,7 @@ my $childs_max = 4;
 my $ignore_size = 0;
 GetOptions(
     'batch-size=i' => \$batch_size,
-    'childs=i'    => \$childs_max,
+    'childs=i'     => \$childs_max,
     'ignore-size'  => \$ignore_size,
 );
 
@@ -51,7 +51,7 @@ sub runner {
         # process a batch
         my $result = $rb->process({
             channel_id  => 1,
-            queue_in    => 'test_in',
+            from_queue  => 'test_in',
             routing_key => 'test_out',
             handler     => \&msg_handler, # this is processing handler
             batch       => {

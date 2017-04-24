@@ -30,7 +30,7 @@ while (!$should_stop) {
     # process a batch
     my $result = $rb->process({
         channel_id  => 1,
-        queue_in    => 'test_in',
+        from_queue  => 'test_in',
         routing_key => 'test_out',
         handler     => \&msg_handler, # this is processing handler
         batch       => {

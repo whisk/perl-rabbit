@@ -7,10 +7,10 @@ Simple batch processing of messages for RabbitMQ
     my $rb = Net::AMQP::RabbitMQ::Batch->new('localhost', { user => 'guest', password => 'guest' }) or croak;
     $rb->process({
         channel_id  => 1,
-        queue_in    => 'test_in',
+        from_queue  => 'test_in',
         routing_key => 'test_out',
         handler     => \&msg_handler,
-        batch       => { size => 10, timeout => 2, ignore_size => 0 }
+        batch       => { size => 10 }
     });
 
     sub msg_handler {
@@ -69,10 +69,10 @@ Process a batch:
 
     $rb->process({
         channel_id  => 1,
-        queue_in    => 'test_in',
+        from_queue  => 'test_in',
         routing_key => 'test_out',
         handler     => \&msg_handler,
-        batch       => { size => 10, timeout => 2, ignore_size => 0 }
+        batch       => { size => 10 }
     });
 
 You might like to wrap it with some `while(1) {...}` loop. See `process_in_batches.pl` or `process_in_forked_batches.pl` for example.
