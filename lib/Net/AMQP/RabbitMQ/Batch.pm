@@ -2,34 +2,37 @@ package Net::AMQP::RabbitMQ::Batch;
 
 use strict;
 use warnings;
+
+our $VERSION = '0.2301';
+
 use Carp qw(carp croak cluck confess);
 use Carp::Assert;
 use Try::Tiny;
 use Net::AMQP::RabbitMQ;
 use Time::HiRes qw(time);
 use Data::Dumper;
-our $VERSION = '0.2300';
+
+=encoding UTF-8
 
 =head1 NAME
 
-Net::AMQP::RabbitMQ::Batch - simple batch processing of messages for RabbitMQ
+Net::AMQP::RabbitMQ::Batch - simple batch processing of messages for RabbitMQ.
 
 =head1 SYNOPSIS
 
     my $rb = Net::AMQP::RabbitMQ::Batch->new('localhost', { user => 'guest', password => 'guest' }) or croak;
     $rb->process({
-        channel_id  => 1,
         from_queue  => 'test_in',
         routing_key => 'test_out',
         handler     => \&msg_handler,
         batch       => {
-            size          => 10, # batch size
-            timeout       => 2,  #
-            ignore_size   => 0   # ignore in/out batches size mismatch
+            size          => 10,        # batch size
+            timeout       => 2,         #
+            ignore_size   => 0          # ignore in/out batches size mismatch
         },
-        ignore_errors => 0,      # ignore handler errors
+        ignore_errors => 0,             # ignore handler errors
         publish_options => {
-            exchange => 'exchange_out', # exchange name
+            exchange => 'exchange_out', # exchange name, default is 'amq.direct'
         },
     });
 
@@ -38,6 +41,95 @@ Net::AMQP::RabbitMQ::Batch - simple batch processing of messages for RabbitMQ
         # work with 10 messages
         return $messages;
     }
+
+=head1 DESCRIPTION
+
+Assume you read messages from a queue, process them and publish. But you would like to do it in batches, processing many messages at once.
+
+This module:
+
+=over
+
+=item *
+gets messages from in queue and publish them by routing key
+
+=item *
+uses your handler to batch process messages
+
+=item *
+keeps persistency - if processing fails, nothing lost from input queue, nothing published
+
+=back
+
+=head1 USAGE
+
+Define a messages handler:
+
+    sub msg_handler {
+        my $messages = shift;
+        # works with hashref of messages
+        return $messages;
+    }
+
+C<$messages> is an arrayref of message objects:
+
+    {
+        body => 'Magic Transient Payload', # the reconstructed body
+        routing_key => 'nr_test_q',        # route the message took
+        delivery_tag => 1,                 # (used for acks)
+        ....
+        # Not all of these will be present. Consult the RabbitMQ reference for more details.
+        props => { ... }
+    }
+
+Handler should return arrayref of message objects (only C<body> is required):
+
+    [
+        { body => 'Processed message' },
+        ...
+    ]
+
+Connect to RabbitMQ:
+
+    my $rb = Net::AMQP::RabbitMQ::Batch->new('localhost', { user => 'guest', password => 'guest' }) or croak;
+
+And process a batch:
+
+    $rb->process({
+        from_queue  => 'test_in',
+        routing_key => 'test_out',
+        handler     => \&msg_handler,
+        batch       => { size => 10 }
+    });
+
+You might like to wrap it with C<while(1) {...}> loop. See F<process_in_batches.pl> or F<process_in_forked_batches.pl> for example.
+
+=head1 METHODS
+
+=head2 process()
+
+=head1 Known Issues
+
+=over
+
+=item *
+Can not set infinity timeout (use very long int)
+
+=item *
+No individual messages processing possible
+
+=item *
+No tests yet which is very sad :(
+
+=back
+
+=head1 AUTHORS
+
+Alex Svetkin
+
+=head1 LICENSE
+
+MIT
 
 =cut
 
