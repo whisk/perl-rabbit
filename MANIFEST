@@ -1,7 +1,7 @@
 .proverc
 lib/Net/AMQP/RabbitMQ/Batch.pm
 LICENSE
-Makefile.pl
+Makefile.PL
 MANIFEST
 MANIFEST.SKIP
 process_in_batches.pl
